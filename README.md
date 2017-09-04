@@ -44,7 +44,7 @@ Libxml.Nif.xml_free_node(children)
 
 ## Typed Thin Wrapper
 
-NIF is incovinient, so I provide typed thin wrapper.
+NIF is incovinient, so this library provides typed thin wrapper.
 
 For example, `Libxml.read_memory/1` corresponds to xmlReadMemory in Libxml2.
 `Libxml.read_memory/1` returns a value type of `%Libxml.Node{}`.
