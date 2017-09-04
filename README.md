@@ -4,7 +4,7 @@ Thin wrapper for Libxml2 using NIF
 
 ## NIF
 
-NIF for Libxml2 are defined in Libxml.Nif.
+NIF for Libxml2 are defined in `Libxml.Nif`.
 
 These functions are **thin** wrapper.
 You should manage yourself the memory allocation and deallocation.
@@ -31,7 +31,7 @@ children = docvalue.children
 docvalue = %{docvalue | children: 0}
 :ok = Libxml.Nif.set_xml_node(docptr, docvalue) # apply
 
-# updated
+# check
 {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
 assert docvalue.children == 0
 
@@ -46,7 +46,7 @@ Libxml.Nif.xml_free_node(children)
 
 NIF is incovinient, so I provide typed thin wrapper.
 
-For example, `Libxml.read_memory/1` corresponds to [`xmlReadMemory`](http://xmlsoft.org/html/libxml-parser.html#xmlReadMemory) in Libxml2.
+For example, `Libxml.read_memory/1` corresponds to xmlReadMemory in Libxml2.
 `Libxml.read_memory/1` returns a value type of `%Libxml.Node{}`.
 `%Libxml.Node{}` has `:pointer` field. The pointer value returned the function is assined this field.
 
