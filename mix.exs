@@ -23,7 +23,7 @@ defmodule Libxml.Mixfile do
   end
 
   defp deps do
-    []
+    [{:ex_doc, "~> 0.16", only: :dev, runtime: false}]
   end
 end
 
