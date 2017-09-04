@@ -10,7 +10,15 @@ defmodule Libxml.Mixfile do
       description: "Thin wrapper for Libxml2 using NIF",
       package: [maintainers: ["melpon"],
                 licenses: ["MIT"],
-                links: %{"GitHub" => "https://github.com/melpon/libxml"}],
+                links: %{"GitHub" => "https://github.com/melpon/libxml"},
+                files: ["mix.exs",
+                        "LICENSE",
+                        "Makefile",
+                        "README.md",
+                        "config",
+                        "lib",
+                        "priv/.gitkeep",
+                        "src"]],
       start_permanent: Mix.env == :prod,
       deps: deps()
     ]
