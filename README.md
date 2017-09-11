@@ -39,7 +39,7 @@ assert docvalue.children == 0
 Libxml.Nif.xml_free_doc(docptr)
 
 # free the child node
-Libxml.Nif.xml_free_node(children)
+Libxml.Nif.xml_free_node_list(children)
 ```
 
 ## Typed Thin Wrapper
@@ -85,5 +85,5 @@ assert node.children == nil
 Libxml.free_doc(node)
 
 # free the child node
-Libxml.free_node(children)
+Libxml.free_node_list(children)
 ```

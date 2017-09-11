@@ -38,6 +38,68 @@ defmodule LibxmlTest do
              </doc>
              """ |> String.trim_trailing()
 
+  test "readme" do
+    content = "<doc></doc>"
+    {:ok, docptr} = Libxml.Nif.xml_read_memory(content)
+    {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
+    IO.inspect docvalue
+    # output:
+    #   %{children: 140639374148016, doc: 140639374150976, last: 140639374148016,
+    #      name: 0, next: 0, parent: 0, prev: 0, private: 0, type: 9}
+    assert docvalue.type == 9 # XML_DOCUMENT_NODE
+
+    children = docvalue.children
+
+    # update
+    docvalue = %{docvalue | children: 0}
+    :ok = Libxml.Nif.set_xml_node(docptr, docvalue) # apply
+
+    # check
+    {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
+    assert docvalue.children == 0
+
+    # free a doc node, but the child node doesn't free yet
+    Libxml.Nif.xml_free_doc(docptr)
+
+    # free the child node
+    Libxml.Nif.xml_free_node_list(children)
+  end
+
+  test "readme2" do
+    content = "<doc></doc>"
+    node = %Libxml.Node{} = Libxml.read_memory(content)
+    node = Libxml.Node.extract(node)
+    IO.inspect node
+    # output:
+    #   %Libxml.Node{children: %Libxml.Node{children: nil, doc: nil, last: nil,
+    #     more: nil, name: nil, next: nil, parent: nil, pointer: 140551835942432,
+    #     prev: nil, private: nil, type: nil},
+    #    doc: %Libxml.Node{children: nil, doc: nil, last: nil, more: nil, name: nil,
+    #     next: nil, parent: nil, pointer: 140551835942128, prev: nil, private: nil,
+    #     type: nil},
+    #    last: %Libxml.Node{children: nil, doc: nil, last: nil, more: nil, name: nil,
+    #     next: nil, parent: nil, pointer: 140551835942432, prev: nil, private: nil,
+    #     type: nil}, more: %Libxml.Node.TODO{}, name: nil, next: nil, parent: nil,
+    #    pointer: 140551835942128, prev: nil, private: 0, type: :document_node}
+    assert node.type == :document_node
+
+    children = node.children
+
+    # update
+    node = %{node | children: nil}
+    :ok = Libxml.Node.apply(node) # apply
+
+    # check
+    node = Libxml.Node.extract(node)
+    assert node.children == nil
+
+    # free a doc node, but the child node doesn't free yet
+    Libxml.free_doc(node)
+
+    # free the child node
+    Libxml.free_node_list(children)
+  end
+
   test "nif" do
     {:ok, doc} = Libxml.Nif.xml_read_memory(@content)
     {:ok, contents} = Libxml.Nif.xml_c14n_doc_dump_memory(doc, 0, 0, [], 1)

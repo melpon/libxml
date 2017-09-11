@@ -36,6 +36,7 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
   return enif_make_tuple2(env, ok_atom, value);
 }
 
+// Eterm(integer) to Pointer
 #define GET_POINTER(TYPE, NAME, ETERM) \
   TYPE NAME; \
   { \
@@ -50,6 +51,7 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
     NAME = (TYPE)intptr; \
   }
 
+// Eterm(integer) to Pointer or null
 #define GET_POINTER_OR_NULL(TYPE, NAME, ETERM) \
   TYPE NAME; \
   { \
@@ -61,6 +63,7 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
     NAME = (TYPE)intptr; \
   }
 
+// Eterm to Integer
 #define GET_INT(NAME, VALUE) \
   int NAME; \
   { \
@@ -70,16 +73,19 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
     } \
   }
 
+// Pointer to Eterm(integer)
 #define SET_POINTER(ETERM_NAME, POINTER) \
   if (POINTER == NULL) { \
     return make_error(env, "pointer_is_null"); \
   } \
   ERL_NIF_TERM ETERM_NAME = enif_make_uint64(env, (ErlNifUInt64)POINTER)
 
+// Pointer or Null to Eterm(integer)
 #define SET_POINTER_OR_NULL(ETERM_NAME, POINTER) \
   ERL_NIF_TERM ETERM_NAME = enif_make_uint64(env, (ErlNifUInt64)POINTER)
 
-#define GET_STRING(BIN_NAME, ETERM) \
+// Eterm(binary) to ErlNifBinary
+#define GET_BINARY(BIN_NAME, ETERM) \
   ErlNifBinary BIN_NAME; \
   { \
     int ret = enif_inspect_binary(env, ETERM, &BIN_NAME); \
@@ -88,33 +94,27 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
     } \
   }
 
-#define STRING_TO_XPATH(BIN_NAME, ETERM) \
-  ErlNifBinary BIN_NAME; \
-  { \
-    int ret = enif_inspect_binary(env, ETERM, &BIN_NAME); \
-    if (ret == 0) { \
-      return make_error(env, "failed_to_inspect_binary"); \
-    } \
-  }
-
+// Integer to Eterm(integer)
 #define SET_INT(ETERM_NAME, VALUE) \
   ERL_NIF_TERM ETERM_NAME = enif_make_int(env, VALUE)
 
+// Double to Eterm(double)
 #define SET_DOUBLE(ETERM_NAME, VALUE) \
   ERL_NIF_TERM ETERM_NAME = enif_make_double(env, VALUE)
 
+// Eterm(map) -> Eterm(any)
 #define GET(MAP, NAME) \
   ERL_NIF_TERM NAME; \
   if (enif_get_map_value(env, MAP, enif_make_atom(env, #NAME), &NAME) == 0) \
     make_error(env, "failed_to_get_map_value")
 
-
+// Eterm(any) -> Eterm(map)
 #define PUT(MAP, NAME) \
   if (enif_make_map_put(env, MAP, enif_make_atom(env, #NAME), NAME, &MAP) == 0) \
     make_error(env, "failed_to_map_put")
 
 static ERL_NIF_TERM xml_read_memory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_STRING(content, argv[0]);
+  GET_BINARY(content, argv[0]);
 
   xmlDocPtr doc = xmlReadMemory((const char*)content.data, content.size, "noname.xml", NULL, 0);
   if (doc == NULL) {
@@ -199,8 +199,8 @@ static ERL_NIF_TERM xml_doc_set_root_element(ErlNifEnv *env, int argc, const ERL
 
 static ERL_NIF_TERM xml_new_ns(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlNodePtr, node, argv[0]);
-  GET_STRING(href, argv[1]);
-  GET_STRING(prefix, argv[2]);
+  GET_BINARY(href, argv[1]);
+  GET_BINARY(prefix, argv[2]);
 
   xmlChar* hrefstr = (xmlChar*)xmlMalloc(href.size + 1);
   if (hrefstr == NULL) {
@@ -255,6 +255,14 @@ static ERL_NIF_TERM xml_free_node(ErlNifEnv *env, int argc, const ERL_NIF_TERM a
   GET_POINTER(xmlNodePtr, node, argv[0]);
 
   xmlFreeNode(node);
+
+  return enif_make_atom(env, "ok");
+}
+
+static ERL_NIF_TERM xml_free_node_list(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlNodePtr, node, argv[0]);
+
+  xmlFreeNodeList(node);
 
   return enif_make_atom(env, "ok");
 }
@@ -367,7 +375,7 @@ static ERL_NIF_TERM xml_xpath_free_context(ErlNifEnv *env, int argc, const ERL_N
 
 static ERL_NIF_TERM xml_xpath_eval(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlXPathContextPtr, ctx, argv[0]);
-  GET_STRING(strbin, argv[1]);
+  GET_BINARY(strbin, argv[1]);
 
   xmlChar* xpath = (xmlChar*)xmlMalloc(strbin.size + 1);
   if (xpath == NULL) {
@@ -773,6 +781,7 @@ static ErlNifFunc nif_funcs[] = {
   {"xml_copy_node", 2, xml_copy_node},
   {"xml_unlink_node", 1, xml_unlink_node},
   {"xml_free_node", 1, xml_free_node},
+  {"xml_free_node_list", 1, xml_free_node_list},
 
   {"xml_c14n_doc_dump_memory", 5, xml_c14n_doc_dump_memory},
 

@@ -18,6 +18,7 @@ defmodule Libxml.Nif do
   def xml_unlink_node(_node), do: raise "NIF not implemented"
   def xml_copy_node(_node, _extended), do: raise "NIF not implemented"
   def xml_free_node(_node), do: raise "NIF not implemented"
+  def xml_free_node_list(_node), do: raise "NIF not implemented"
 
   def xml_c14n_doc_dump_memory(_doc, _nodeset, _mode, _inclusive_ns_prefixes, _with_comments), do: raise "NIF not implemented"
 

@@ -97,4 +97,8 @@ defmodule Libxml do
   def free_node(%Libxml.Node{pointer: pointer}) do
     Libxml.Nif.xml_free_node(pointer)
   end
+
+  def free_node_list(%Libxml.Node{pointer: pointer}) do
+    Libxml.Nif.xml_free_node_list(pointer)
+  end
 end
