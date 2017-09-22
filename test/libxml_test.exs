@@ -48,21 +48,16 @@ defmodule LibxmlTest do
     #      name: 0, next: 0, parent: 0, prev: 0, private: 0, type: 9}
     assert docvalue.type == 9 # XML_DOCUMENT_NODE
 
-    children = docvalue.children
-
     # update
-    docvalue = %{docvalue | children: 0}
+    docvalue = %{docvalue | private: 100}
     :ok = Libxml.Nif.set_xml_node(docptr, docvalue) # apply
 
     # check
     {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
-    assert docvalue.children == 0
+    assert docvalue.private == 100
 
-    # free a doc node, but the child node doesn't free yet
+    # free a doc node
     Libxml.Nif.xml_free_doc(docptr)
-
-    # free the child node
-    Libxml.Nif.xml_free_node_list(children)
   end
 
   test "readme2" do
@@ -83,21 +78,16 @@ defmodule LibxmlTest do
     #    pointer: 140551835942128, prev: nil, private: 0, type: :document_node}
     assert node.type == :document_node
 
-    children = node.children
-
     # update
-    node = %{node | children: nil}
+    node = %{node | private: 100}
     :ok = Libxml.Node.apply(node) # apply
 
     # check
     node = Libxml.Node.extract(node)
-    assert node.children == nil
+    assert node.private == 100
 
-    # free a doc node, but the child node doesn't free yet
+    # free a doc node
     Libxml.free_doc(node)
-
-    # free the child node
-    Libxml.free_node_list(children)
   end
 
   test "nif" do
