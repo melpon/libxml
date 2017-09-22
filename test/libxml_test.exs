@@ -42,7 +42,7 @@ defmodule LibxmlTest do
     content = "<doc></doc>"
     {:ok, docptr} = Libxml.Nif.xml_read_memory(content)
     {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
-    IO.inspect docvalue
+    #IO.inspect docvalue
     # output:
     #   %{children: 140639374148016, doc: 140639374150976, last: 140639374148016,
     #      name: 0, next: 0, parent: 0, prev: 0, private: 0, type: 9}
@@ -69,7 +69,7 @@ defmodule LibxmlTest do
     content = "<doc></doc>"
     node = %Libxml.Node{} = Libxml.read_memory(content)
     node = Libxml.Node.extract(node)
-    IO.inspect node
+    #IO.inspect node
     # output:
     #   %Libxml.Node{children: %Libxml.Node{children: nil, doc: nil, last: nil,
     #     more: nil, name: nil, next: nil, parent: nil, pointer: 140551835942432,
