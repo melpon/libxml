@@ -285,12 +285,12 @@ static ERL_NIF_TERM xml_c14n_doc_dump_memory(ErlNifEnv *env, int argc, const ERL
   GET_INT(mode, argv[2]);
 
   xmlChar** inclusive_ns_prefixes = NULL;
-  unsigned int inclusive_ns_prefixes_length = 0;
+  unsigned int inclusive_ns_prefixes_length;
   {
     ERL_NIF_TERM list = argv[3];
     int ret;
 
-    unsigned int len;
+    unsigned int len = 0;
     ret = enif_get_list_length(env, list, &len);
     if (ret == 0) {
       return make_error(env, "failed_to_get_list_length");
@@ -563,6 +563,7 @@ static ERL_NIF_TERM set_xml_node(ErlNifEnv *env, int argc, const ERL_NIF_TERM ar
   p->name = name2;
   p->children = children2;
   p->last = last2;
+  p->parent = parent2;
   p->next = next2;
   p->prev = prev2;
   p->doc = doc2;
