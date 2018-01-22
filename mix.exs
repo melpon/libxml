@@ -5,7 +5,7 @@ defmodule Libxml.Mixfile do
     [
       app: :libxml,
       compilers: [:make_libxml] ++ Mix.compilers(),
-      version: "1.0.3",
+      version: "1.0.4",
       elixir: "~> 1.4",
       description: "Thin wrapper for Libxml2 using NIF",
       package: [
