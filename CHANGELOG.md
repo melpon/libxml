@@ -1,6 +1,6 @@
 # Changelog
 
-## x.y.z
+## 1.0.4
 
 - Add changelog
 - Update dependencies
