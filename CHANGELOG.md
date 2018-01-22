@@ -4,4 +4,4 @@
 
 - Add changelog
 - Update dependencies
-- Run Elixir formatter
+- Apply Elixir formatter

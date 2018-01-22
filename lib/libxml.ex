@@ -11,6 +11,7 @@ defmodule Libxml do
   def safe_read_memory(contents, fun) do
     {:ok, pointer} = Libxml.Nif.xml_read_memory(contents)
     doc = %Libxml.Node{pointer: pointer}
+
     try do
       fun.(doc)
     after
@@ -26,6 +27,7 @@ defmodule Libxml do
 
   def safe_copy_doc(doc, recursive, fun) do
     doc = copy_doc(doc, recursive)
+
     try do
       fun.(doc)
     after
@@ -34,19 +36,27 @@ defmodule Libxml do
   end
 
   def copy_node(%Libxml.Node{pointer: pointer}, extended) do
-    extended_value = case extended do
-      :shallow -> 0
-      # if 1 do a recursive copy (properties, namespaces and children when applicable)
-      :recursive -> 1
-      # if 2 copy properties and namespaces (when applicable)
-      :partial -> 2
-    end
+    extended_value =
+      case extended do
+        :shallow ->
+          0
+
+        # if 1 do a recursive copy (properties, namespaces and children when applicable)
+        :recursive ->
+          1
+
+        # if 2 copy properties and namespaces (when applicable)
+        :partial ->
+          2
+      end
+
     {:ok, pointer} = Libxml.Nif.xml_copy_node(pointer, extended_value)
     %Libxml.Node{pointer: pointer}
   end
 
   def safe_copy_node(node, extended, fun) do
     node = copy_node(node, extended)
+
     try do
       fun.(node)
     after
@@ -54,20 +64,28 @@ defmodule Libxml do
     end
   end
 
-  def doc_copy_node(%Libxml.Node{pointer: node_pointer}, %Libxml.Node{pointer: doc_pointer}, extended) do
-    extended_value = case extended do
-      :shallow -> 0
-      # if 1 do a recursive copy (properties, namespaces and children when applicable)
-      :recursive -> 1
-      # if 2 copy properties and namespaces (when applicable)
-      :partial -> 2
-    end
-    {:ok, pointer} = Libxml.Nif.xml_doc_copy_node(node_pointer, doc_pointer, extended_value)
+  def doc_copy_node(node, doc, extended) do
+    extended_value =
+      case extended do
+        :shallow ->
+          0
+
+        # if 1 do a recursive copy (properties, namespaces and children when applicable)
+        :recursive ->
+          1
+
+        # if 2 copy properties and namespaces (when applicable)
+        :partial ->
+          2
+      end
+
+    {:ok, pointer} = Libxml.Nif.xml_doc_copy_node(node.pointer, doc.pointer, extended_value)
     %Libxml.Node{pointer: pointer}
   end
 
   def safe_doc_copy_node(node, doc, extended, fun) do
     node = doc_copy_node(node, doc, extended)
+
     try do
       fun.(node)
     after

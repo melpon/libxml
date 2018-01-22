@@ -8,15 +8,16 @@ defmodule Libxml.XPath do
       %__MODULE__{
         pointer: pointer,
         doc: %Libxml.Node{pointer: ctx.doc},
-        node: Libxml.Util.ptr_to_type(Libxml.Node, ctx.node),
+        node: Libxml.Util.ptr_to_type(Libxml.Node, ctx.node)
       }
     end
 
     def apply(%__MODULE__{pointer: pointer, doc: doc, node: node}) do
       map = %{
         doc: doc.pointer,
-        node: Libxml.Util.type_to_ptr(node),
+        node: Libxml.Util.type_to_ptr(node)
       }
+
       :ok = Libxml.Nif.set_xml_xpath_context(pointer, map)
       :ok
     end
@@ -28,12 +29,14 @@ defmodule Libxml.XPath do
     def extract(%__MODULE__{pointer: pointer}) do
       {:ok, nodeset} = Libxml.Nif.get_xml_node_set(pointer)
 
-      nodes = for node <- nodeset.nodes do
-        %Libxml.Node{pointer: node}
-      end
+      nodes =
+        for node <- nodeset.nodes do
+          %Libxml.Node{pointer: node}
+        end
+
       %__MODULE__{
         pointer: pointer,
-        nodes: nodes,
+        nodes: nodes
       }
     end
   end
@@ -45,23 +48,25 @@ defmodule Libxml.XPath do
       {:ok, obj} = Libxml.Nif.get_xml_xpath_object(pointer)
 
       type = obj_type(obj.type)
-      content = case type do
-        :undefined -> nil
-        :nodeset -> Libxml.Util.ptr_to_type(Libxml.XPath.NodeSet, obj.nodesetval)
-        :boolean -> obj.boolval != 0
-        :number -> obj.floatval
-        :string -> Libxml.Util.ptr_to_type(Libxml.Char, obj.stringval)
-        :point -> %{index: obj.index, user: obj.user}
-        :range -> %{index: obj.index, index2: obj.index2, user: obj.user, user2: obj.user2}
-        :locationset -> %{user: obj.user}
-        :users -> nil
-        :xslt_tree -> Libxml.Util.ptr_to_type(Libxml.XPath.NodeSet, obj.nodesetval)
-      end
+
+      content =
+        case type do
+          :undefined -> nil
+          :nodeset -> Libxml.Util.ptr_to_type(Libxml.XPath.NodeSet, obj.nodesetval)
+          :boolean -> obj.boolval != 0
+          :number -> obj.floatval
+          :string -> Libxml.Util.ptr_to_type(Libxml.Char, obj.stringval)
+          :point -> %{index: obj.index, user: obj.user}
+          :range -> %{index: obj.index, index2: obj.index2, user: obj.user, user2: obj.user2}
+          :locationset -> %{user: obj.user}
+          :users -> nil
+          :xslt_tree -> Libxml.Util.ptr_to_type(Libxml.XPath.NodeSet, obj.nodesetval)
+        end
 
       %__MODULE__{
         pointer: pointer,
         type: type,
-        content: content,
+        content: content
       }
     end
 
@@ -81,12 +86,14 @@ defmodule Libxml.XPath do
     {:ok, pointer} = Libxml.Nif.xml_xpath_new_context(pointer)
     %Libxml.XPath.Context{pointer: pointer}
   end
+
   def free_context(%Libxml.XPath.Context{pointer: pointer}) do
     Libxml.Nif.xml_xpath_free_context(pointer)
   end
 
   def safe_new_context(doc, fun) do
     context = new_context(doc)
+
     try do
       fun.(context)
     after
@@ -105,6 +112,7 @@ defmodule Libxml.XPath do
 
   def safe_eval(context, xpath, fun) do
     obj = eval(context, xpath)
+
     try do
       fun.(obj)
     after

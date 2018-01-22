@@ -4,22 +4,26 @@ defmodule Libxml.Mixfile do
   def project do
     [
       app: :libxml,
-      compilers: [:make_libxml] ++ Mix.compilers,
+      compilers: [:make_libxml] ++ Mix.compilers(),
       version: "1.0.3",
       elixir: "~> 1.4",
       description: "Thin wrapper for Libxml2 using NIF",
-      package: [maintainers: ["melpon"],
-                licenses: ["MIT"],
-                links: %{"GitHub" => "https://github.com/melpon/libxml"},
-                files: ["mix.exs",
-                        "LICENSE",
-                        "Makefile",
-                        "README.md",
-                        "config",
-                        "lib",
-                        "priv/.gitkeep",
-                        "src"]],
-      start_permanent: Mix.env == :prod,
+      package: [
+        maintainers: ["melpon"],
+        licenses: ["MIT"],
+        links: %{"GitHub" => "https://github.com/melpon/libxml"},
+        files: [
+          "mix.exs",
+          "LICENSE",
+          "Makefile",
+          "README.md",
+          "config",
+          "lib",
+          "priv/.gitkeep",
+          "src"
+        ]
+      ],
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -38,9 +42,11 @@ end
 defmodule Mix.Tasks.Compile.MakeLibxml do
   def run(_args) do
     {_, result_code} = System.cmd("make", [], into: IO.stream(:stdio, :line))
+
     if result_code != 0 do
-      Mix.raise "exit code #{result_code}"
+      Mix.raise("exit code #{result_code}")
     end
+
     :ok
   end
 end

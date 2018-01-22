@@ -3,16 +3,16 @@ defmodule LibxmlTest do
   doctest Libxml
 
   @content """
-           <!DOCTYPE doc [<!ATTLIST normId id ID #IMPLIED>]>
-           <doc>
-              <text>First line&#x0d;&#10;Second line</text>
-              <value>&#x32;</value>
-              <compute><![CDATA[value>"0" && value<"10" ?"valid":"error"]]></compute>
-              <compute expr='value>"0" &amp;&amp; value&lt;"10" ?"valid":"error"'>valid</compute>
-              <norm attr=' &apos;   &#x20;&#13;&#xa;&#9;   &apos; '/>
-              <normId id=' &apos;   &#x20;&#13;&#xa;&#9;   &apos; '/>
-           </doc>
-           """
+  <!DOCTYPE doc [<!ATTLIST normId id ID #IMPLIED>]>
+  <doc>
+     <text>First line&#x0d;&#10;Second line</text>
+     <value>&#x32;</value>
+     <compute><![CDATA[value>"0" && value<"10" ?"valid":"error"]]></compute>
+     <compute expr='value>"0" &amp;&amp; value&lt;"10" ?"valid":"error"'>valid</compute>
+     <norm attr=' &apos;   &#x20;&#13;&#xa;&#9;   &apos; '/>
+     <normId id=' &apos;   &#x20;&#13;&#xa;&#9;   &apos; '/>
+  </doc>
+  """
 
   @expected1 """
              <doc>
@@ -24,7 +24,8 @@ defmodule LibxmlTest do
                 <norm attr=" '    &#xD;&#xA;&#x9;   ' "></norm>
                 <normId id="' &#xD;&#xA;&#x9; '"></normId>
              </doc>
-             """ |> String.trim_trailing()
+             """
+             |> String.trim_trailing()
 
   @expected2 """
              <doc>
@@ -36,21 +37,24 @@ defmodule LibxmlTest do
                 <norm attr=" '    &#xD;&#xA;&#x9;   ' "></norm>
                 <normId id="' &#xD;&#xA;&#x9; '"></normId>
              </doc>
-             """ |> String.trim_trailing()
+             """
+             |> String.trim_trailing()
 
   test "readme" do
     content = "<doc></doc>"
     {:ok, docptr} = Libxml.Nif.xml_read_memory(content)
     {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
-    #IO.inspect docvalue
+    # IO.inspect docvalue
     # output:
     #   %{children: 140639374148016, doc: 140639374150976, last: 140639374148016,
     #      name: 0, next: 0, parent: 0, prev: 0, private: 0, type: 9}
-    assert docvalue.type == 9 # XML_DOCUMENT_NODE
+    # XML_DOCUMENT_NODE
+    assert docvalue.type == 9
 
     # update
     docvalue = %{docvalue | private: 100}
-    :ok = Libxml.Nif.set_xml_node(docptr, docvalue) # apply
+    # apply
+    :ok = Libxml.Nif.set_xml_node(docptr, docvalue)
 
     # check
     {:ok, docvalue} = Libxml.Nif.get_xml_node(docptr)
@@ -64,7 +68,7 @@ defmodule LibxmlTest do
     content = "<doc></doc>"
     node = %Libxml.Node{} = Libxml.read_memory(content)
     node = Libxml.Node.extract(node)
-    #IO.inspect node
+    # IO.inspect node
     # output:
     #   %Libxml.Node{children: %Libxml.Node{children: nil, doc: nil, last: nil,
     #     more: nil, name: nil, next: nil, parent: nil, pointer: 140551835942432,
@@ -80,7 +84,8 @@ defmodule LibxmlTest do
 
     # update
     node = %{node | private: 100}
-    :ok = Libxml.Node.apply(node) # apply
+    # apply
+    :ok = Libxml.Node.apply(node)
 
     # check
     node = Libxml.Node.extract(node)
@@ -106,28 +111,34 @@ defmodule LibxmlTest do
     :ok = Libxml.Nif.xml_free_doc(copied_doc)
 
     {:ok, node} = Libxml.Nif.get_xml_node(doc)
-    assert 9 == node.type # XML_DOCUMENT_NODE
+    # XML_DOCUMENT_NODE
+    assert 9 == node.type
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.children)
-    assert 14 == node.type # XML_DTD_NODE
+    # XML_DTD_NODE
+    assert 14 == node.type
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.next)
-    assert 1 == node.type # XML_ELEMENT_NODE
+    # XML_ELEMENT_NODE
+    assert 1 == node.type
     {:ok, name} = Libxml.Nif.get_xml_char(node.name)
     assert "doc" == name
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.children)
-    assert 3 == node.type # XML_TEXT_NODE
+    # XML_TEXT_NODE
+    assert 3 == node.type
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "\n   " == content
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.next)
-    assert 1 == node.type # XML_ELEMENT_NODE
+    # XML_ELEMENT_NODE
+    assert 1 == node.type
     {:ok, name} = Libxml.Nif.get_xml_char(node.name)
     assert "text" == name
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.children)
-    assert 3 == node.type # XML_TEXT_NODE
+    # XML_TEXT_NODE
+    assert 3 == node.type
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "First line\r\nSecond line" == content
     assert 0 == node.next
@@ -136,9 +147,11 @@ defmodule LibxmlTest do
     {:ok, p} = Libxml.Nif.xml_xpath_eval(ctx, "/doc/compute")
 
     {:ok, obj} = Libxml.Nif.get_xml_xpath_object(p)
-    assert 1 == obj.type # XPATH_NODESET
+    # XPATH_NODESET
+    assert 1 == obj.type
     {:ok, ns} = Libxml.Nif.get_xml_node_set(obj.nodesetval)
     assert 2 == length(ns.nodes)
+
     for node <- ns.nodes do
       :ok = Libxml.Nif.xml_unlink_node(node)
       :ok = Libxml.Nif.xml_free_node(node)
@@ -146,9 +159,9 @@ defmodule LibxmlTest do
 
     {:ok, contents} = Libxml.Nif.xml_c14n_doc_dump_memory(doc, 0, 0, [], 1)
 
-    Libxml.Nif.xml_xpath_free_object(p);
-    Libxml.Nif.xml_xpath_free_context(ctx);
-    Libxml.Nif.xml_free_doc(doc);
+    Libxml.Nif.xml_xpath_free_object(p)
+    Libxml.Nif.xml_xpath_free_context(ctx)
+    Libxml.Nif.xml_free_doc(doc)
 
     assert @expected2 == contents
   end
@@ -179,12 +192,14 @@ defmodule LibxmlTest do
     :ok = Libxml.Nif.xml_xpath_free_context(ctx)
 
     {:ok, node} = Libxml.Nif.get_xml_node(value_node)
-    assert 1 == node.type # XML_ELEMENT_NODE
+    # XML_ELEMENT_NODE
+    assert 1 == node.type
     {:ok, name} = Libxml.Nif.get_xml_char(node.name)
     assert "value" == name
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.children)
-    assert 3 == node.type # XML_TEXT_NODE
+    # XML_TEXT_NODE
+    assert 3 == node.type
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "2" == content
   end
@@ -238,6 +253,7 @@ defmodule LibxmlTest do
 
           nodeset = Libxml.XPath.NodeSet.extract(obj.content)
           assert 2 == length(nodeset.nodes)
+
           for node <- nodeset.nodes do
             :ok = Libxml.unlink_node(node)
             :ok = Libxml.free_node(node)
