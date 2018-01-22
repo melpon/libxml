@@ -41,5 +41,6 @@ defmodule Mix.Tasks.Compile.MakeLibxml do
     if result_code != 0 do
       Mix.raise "exit code #{result_code}"
     end
+    :ok
   end
 end
