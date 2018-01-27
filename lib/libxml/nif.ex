@@ -28,6 +28,16 @@ defmodule Libxml.Nif do
   def xml_xpath_eval(_ctx, _xpath), do: raise("NIF not implemented")
   def xml_xpath_free_object(_obj), do: raise("NIF not implemented")
 
+  def xml_schema_new_parser_ctxt(_url), do: raise("NIF not implemented")
+  def xml_schema_new_doc_parser_ctxt(_doc), do: raise("NIF not implemented")
+  def xml_schema_parse(_ctxt), do: raise("NIF not implemented")
+  def xml_schema_new_valid_ctxt(_schema), do: raise("NIF not implemented")
+  def xml_schema_validate_doc(_ctxt, _doc), do: raise("NIF not implemented")
+  def xml_schema_free_parser_ctxt(_ctxt), do: raise("NIF not implemented")
+  def xml_schema_free(_schema), do: raise("NIF not implemented")
+  def xml_schema_free_valid_ctxt(_ctxt), do: raise("NIF not implemented")
+  # def xml_schema_set_parser_errors(_ctxt, _err, _warn, _ctx), do: raise("NIF not implemented")
+
   def get_xml_node(_node), do: raise("NIF not implemented")
   def set_xml_node(_node, _map), do: raise("NIF not implemented")
   def get_xml_char(_char), do: raise("NIF not implemented")

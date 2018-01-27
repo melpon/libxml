@@ -3,6 +3,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/c14n.h>
+#include <libxml/xmlschemas.h>
 #include <string.h>
 #include <assert.h>
 
@@ -767,6 +768,65 @@ static ERL_NIF_TERM get_xml_node_set(ErlNifEnv *env, int argc, const ERL_NIF_TER
   return make_ok(env, map);
 }
 
+static ERL_NIF_TERM xml_schema_new_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_BINARY(url, argv[0]);
+
+  char* urlstr = (char*)xmlMalloc(url.size + 1);
+  if (urlstr == NULL) {
+    return make_error(env, "malloc_failed");
+  }
+  memcpy(urlstr, url.data, url.size);
+  urlstr[url.size] = '\0';
+
+  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewParserCtxt(urlstr);
+
+  xmlFree(urlstr);
+
+  SET_POINTER(ptr, ctxt);
+
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_new_doc_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlDocPtr, doc, argv[0]);
+  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewDocParserCtxt(doc);
+  SET_POINTER(ptr, ctxt);
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaParserCtxtPtr, ctxt, argv[0]);
+  xmlSchemaPtr schema = xmlSchemaParse(ctxt);
+  SET_POINTER(ptr, schema);
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_new_valid_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaPtr, schema, argv[0]);
+  xmlSchemaValidCtxtPtr ctxt = xmlSchemaNewValidCtxt(schema);
+  SET_POINTER(ptr, ctxt);
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_validate_doc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaValidCtxtPtr, ctxt, argv[0]);
+  GET_POINTER(xmlDocPtr, instance, argv[1]);
+  int result = xmlSchemaValidateDoc(ctxt, instance);
+  SET_INT(result_term, result);
+  return make_ok(env, result_term);
+}
+static ERL_NIF_TERM xml_schema_free_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaParserCtxtPtr, ctxt, argv[0]);
+  xmlSchemaFreeParserCtxt(ctxt);
+  return enif_make_atom(env, "ok");
+}
+static ERL_NIF_TERM xml_schema_free(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaPtr, schema, argv[0]);
+  xmlSchemaFree(schema);
+  return enif_make_atom(env, "ok");
+}
+static ERL_NIF_TERM xml_schema_free_valid_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaValidCtxtPtr, ctxt, argv[0]);
+  xmlSchemaFreeValidCtxt(ctxt);
+  return enif_make_atom(env, "ok");
+}
+
 static ErlNifFunc nif_funcs[] = {
   // {erl_function_name, erl_function_arity, c_function}
   {"xml_read_memory", 1, xml_read_memory},
@@ -790,6 +850,16 @@ static ErlNifFunc nif_funcs[] = {
   {"xml_xpath_free_context", 1, xml_xpath_free_context},
   {"xml_xpath_eval", 2, xml_xpath_eval},
   {"xml_xpath_free_object", 1, xml_xpath_free_object},
+
+  {"xml_schema_new_parser_ctxt", 1, xml_schema_new_parser_ctxt},
+  {"xml_schema_new_doc_parser_ctxt", 1, xml_schema_new_doc_parser_ctxt},
+  {"xml_schema_parse", 1, xml_schema_parse},
+  {"xml_schema_new_valid_ctxt", 1, xml_schema_new_valid_ctxt},
+  {"xml_schema_validate_doc", 2, xml_schema_validate_doc},
+  {"xml_schema_free_parser_ctxt", 1, xml_schema_free_parser_ctxt},
+  {"xml_schema_free", 1, xml_schema_free},
+  {"xml_schema_free_valid_ctxt", 1, xml_schema_free_valid_ctxt},
+  // {"xml_schema_set_parser_errors, 4, xml_schema_set_parser_errors},
 
   {"get_xml_node", 1, get_xml_node},
   {"set_xml_node", 2, set_xml_node},

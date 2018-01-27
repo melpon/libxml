@@ -304,4 +304,46 @@ defmodule LibxmlTest do
       assert "2" == content.content
     end)
   end
+
+  test "XML Schema NIF" do
+    {:ok, parser_ctxt} = Libxml.Nif.xml_schema_new_parser_ctxt("test/all_0.xsd")
+    assert 0 != parser_ctxt
+    {:ok, schema} = Libxml.Nif.xml_schema_parse(parser_ctxt)
+    assert 0 != schema
+    :ok = Libxml.Nif.xml_schema_free_parser_ctxt(parser_ctxt)
+
+    content = "<doc><a/><b/><c/></doc>"
+    {:ok, doc} = Libxml.Nif.xml_read_memory(content)
+    assert 0 != doc
+    {:ok, ctxt} = Libxml.Nif.xml_schema_new_valid_ctxt(schema)
+    assert 0 != ctxt
+    {:ok, ret} = Libxml.Nif.xml_schema_validate_doc(ctxt, doc)
+    assert 0 == ret
+
+    Libxml.Nif.xml_schema_free_valid_ctxt(ctxt);
+    Libxml.Nif.xml_free_doc(doc);
+    Libxml.Nif.xml_schema_free(schema);
+  end
+
+  test "XML Schema" do
+    fun = fn ctxt ->
+      Libxml.Schema.safe_parse(ctxt, fn schema ->
+
+        content = "<doc><a/><b/><c/></doc>"
+        Libxml.safe_read_memory(content, fn doc ->
+          Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
+            ret = Libxml.Schema.validate_doc(ctxt, doc)
+            assert :ok == ret
+          end)
+        end)
+      end)
+    end
+
+    Libxml.Schema.safe_new_parser_ctxt("test/all_0.xsd", fun)
+
+    content = File.read!("test/all_0.xsd")
+    Libxml.safe_read_memory(content, fn doc ->
+      Libxml.Schema.safe_new_doc_parser_ctxt(doc, fun)
+    end)
+  end
 end
