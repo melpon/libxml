@@ -320,16 +320,16 @@ defmodule LibxmlTest do
     {:ok, ret} = Libxml.Nif.xml_schema_validate_doc(ctxt, doc)
     assert 0 == ret
 
-    Libxml.Nif.xml_schema_free_valid_ctxt(ctxt);
-    Libxml.Nif.xml_free_doc(doc);
-    Libxml.Nif.xml_schema_free(schema);
+    Libxml.Nif.xml_schema_free_valid_ctxt(ctxt)
+    Libxml.Nif.xml_free_doc(doc)
+    Libxml.Nif.xml_schema_free(schema)
   end
 
   test "XML Schema" do
     fun = fn ctxt ->
       Libxml.Schema.safe_parse(ctxt, fn schema ->
-
         content = "<doc><a/><b/><c/></doc>"
+
         Libxml.safe_read_memory(content, fn doc ->
           Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
             ret = Libxml.Schema.validate_doc(ctxt, doc)
@@ -342,6 +342,7 @@ defmodule LibxmlTest do
     Libxml.Schema.safe_new_parser_ctxt("test/all_0.xsd", fun)
 
     content = File.read!("test/all_0.xsd")
+
     Libxml.safe_read_memory(content, fn doc ->
       Libxml.Schema.safe_new_doc_parser_ctxt(doc, fun)
     end)

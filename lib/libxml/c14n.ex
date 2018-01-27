@@ -21,7 +21,14 @@ defmodule Libxml.C14N do
         false -> 0
       end
 
-    {:ok, content} = Libxml.Nif.xml_c14n_doc_dump_memory(pointer, nodeset_value, mode_value, inclusive_ns_prefixes, with_comments_value)
+    {:ok, content} =
+      Libxml.Nif.xml_c14n_doc_dump_memory(
+        pointer,
+        nodeset_value,
+        mode_value,
+        inclusive_ns_prefixes,
+        with_comments_value
+      )
 
     content
   end

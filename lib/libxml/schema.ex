@@ -4,6 +4,7 @@ defmodule Libxml.Schema do
   defmodule ParserCtxt do
     defstruct [:pointer]
   end
+
   defmodule ValidCtxt do
     defstruct [:pointer]
   end
@@ -30,10 +31,14 @@ defmodule Libxml.Schema do
 
   def validate_doc(%ValidCtxt{} = ctxt, %Libxml.Node{} = doc) do
     {:ok, ret} = Libxml.Nif.xml_schema_validate_doc(ctxt.pointer, doc.pointer)
+
     cond do
-      ret == 0 -> :ok
+      ret == 0 ->
+        :ok
+
       ret < 0 ->
         {:error, {:internal_error, ret}}
+
       ret > 0 ->
         {:error, {:validate_error, validate_error_to_atom(ret)}}
     end
@@ -42,9 +47,11 @@ defmodule Libxml.Schema do
   def free_parser_ctxt(%ParserCtxt{} = ctxt) do
     :ok = Libxml.Nif.xml_schema_free_parser_ctxt(ctxt.pointer)
   end
+
   def free(schema) do
     :ok = Libxml.Nif.xml_schema_free(schema.pointer)
   end
+
   def free_valid_ctxt(ctxt) do
     :ok = Libxml.Nif.xml_schema_free_valid_ctxt(ctxt.pointer)
   end
@@ -117,7 +124,7 @@ defmodule Libxml.Schema do
     :attrunknown,
     :attrinvalid,
     :value,
-    :facet,
+    :facet
   ]
   defp validate_error_to_atom(value) do
     case Enum.fetch(@validate_errors, value) do
