@@ -347,4 +347,36 @@ defmodule LibxmlTest do
       Libxml.Schema.safe_new_doc_parser_ctxt(doc, fun)
     end)
   end
+
+  @content """
+  <?xml version="1.0" encoding="UTF-8"?>
+
+  <foo xmlns="http://example.com/XMLSchema/1.0">
+  </foo>
+  """
+
+  @schema """
+  <?xml version="1.0" encoding="utf-8" ?>
+  <!DOCTYPE xs:schema PUBLIC "-//W3C//DTD XMLSCHEMA 200102//EN" "XMLSchema.dtd" >
+  <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://example.com/XMLSchema/1.0" targetNamespace="http://example.com/XMLSchema/1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+      <xs:element name="foo">
+      </xs:element>
+  </xs:schema>
+  """
+
+  test "XML Schema from https://stackoverflow.com/questions/6284827/why-does-this-xml-validation-via-xsd-fail-in-libxml2-but-succeed-in-xmllint-an" do
+    Libxml.safe_read_memory(@schema, fn doc ->
+      Libxml.Schema.safe_new_doc_parser_ctxt(doc, fn ctxt ->
+        Libxml.Schema.safe_parse(ctxt, fn schema ->
+          Libxml.safe_read_memory(@content, fn doc ->
+            Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
+              ret = Libxml.Schema.validate_doc(ctxt, doc)
+              assert :ok == ret
+            end)
+          end)
+        end)
+      end)
+    end)
+  end
 end
