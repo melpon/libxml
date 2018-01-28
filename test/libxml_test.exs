@@ -318,7 +318,7 @@ defmodule LibxmlTest do
     {:ok, ctxt} = Libxml.Nif.xml_schema_new_valid_ctxt(schema)
     assert 0 != ctxt
     {:ok, ret} = Libxml.Nif.xml_schema_validate_doc(ctxt, doc)
-    assert 0 == ret
+    assert {0, []} == ret
 
     Libxml.Nif.xml_schema_free_valid_ctxt(ctxt)
     Libxml.Nif.xml_free_doc(doc)
@@ -333,7 +333,7 @@ defmodule LibxmlTest do
         Libxml.safe_read_memory(content, fn doc ->
           Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
             ret = Libxml.Schema.validate_doc(ctxt, doc)
-            assert :ok == ret
+            assert {:ok, []} == ret
           end)
         end)
       end)
@@ -345,6 +345,34 @@ defmodule LibxmlTest do
 
     Libxml.safe_read_memory(content, fn doc ->
       Libxml.Schema.safe_new_doc_parser_ctxt(doc, fun)
+    end)
+  end
+
+  test "XML Schema with invalid document" do
+    Libxml.Schema.safe_new_parser_ctxt("test/all_0.xsd", fn ctxt ->
+      Libxml.Schema.safe_parse(ctxt, fn schema ->
+        content = "<doc><a/><b/></doc>"
+
+        Libxml.safe_read_memory(content, fn doc ->
+          Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
+            ret = Libxml.Schema.validate_doc(ctxt, doc)
+            error = %Libxml.Error{
+              domain: :from_schemasv,
+              code: :schemav_element_content,
+              level: :err_error,
+              file: "noname.xml",
+              line: 1,
+              message: "Element 'doc': Missing child element(s). Expected is ( c ).\n",
+              str1: "",
+              str2: "",
+              str3: "",
+              int1: 0,
+              int2: 0,
+            }
+            assert {:error, [error]} == ret
+          end)
+        end)
+      end)
     end)
   end
 
@@ -372,7 +400,7 @@ defmodule LibxmlTest do
           Libxml.safe_read_memory(@content, fn doc ->
             Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
               ret = Libxml.Schema.validate_doc(ctxt, doc)
-              assert :ok == ret
+              assert {:ok, []} == ret
             end)
           end)
         end)

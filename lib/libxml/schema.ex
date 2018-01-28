@@ -30,17 +30,13 @@ defmodule Libxml.Schema do
   end
 
   def validate_doc(%ValidCtxt{} = ctxt, %Libxml.Node{} = doc) do
-    {:ok, ret} = Libxml.Nif.xml_schema_validate_doc(ctxt.pointer, doc.pointer)
+    {:ok, {ret, errors}} = Libxml.Nif.xml_schema_validate_doc(ctxt.pointer, doc.pointer)
+    errors = Enum.map(errors, &Libxml.Error.from_map/1)
 
-    cond do
-      ret == 0 ->
-        :ok
-
-      ret < 0 ->
-        {:error, {:internal_error, ret}}
-
-      ret > 0 ->
-        {:error, {:validate_error, validate_error_to_atom(ret)}}
+    if ret == 0 do
+      {:ok, errors}
+    else
+      {:error, errors}
     end
   end
 
@@ -97,39 +93,6 @@ defmodule Libxml.Schema do
       fun.(ctxt)
     after
       free_valid_ctxt(ctxt)
-    end
-  end
-
-  @validate_errors [
-    :ok,
-    :noroot,
-    :undeclaredelem,
-    :nottoplevel,
-    :missing,
-    :wrongelem,
-    :notype,
-    :norollback,
-    :isabstract,
-    :notempty,
-    :elemcont,
-    :havedefault,
-    :notnillable,
-    :extracontent,
-    :invalidattr,
-    :invalidelem,
-    :notdeterminist,
-    :construct,
-    :internal,
-    :notsimple,
-    :attrunknown,
-    :attrinvalid,
-    :value,
-    :facet
-  ]
-  defp validate_error_to_atom(value) do
-    case Enum.fetch(@validate_errors, value) do
-      {:ok, name} -> name
-      :error -> :unknown
     end
   end
 end

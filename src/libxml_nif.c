@@ -95,6 +95,15 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
     } \
   }
 
+// char* to Eterm(binary)
+#define SET_STRING(ETERM_NAME, STR) \
+  ERL_NIF_TERM ETERM_NAME; \
+  { \
+    int tmplen = STR == NULL ? 0 : strlen(STR); \
+    unsigned char* tmpbuf = enif_make_new_binary(env, tmplen, &ETERM_NAME); \
+    memcpy(tmpbuf, STR, tmplen); \
+  }
+
 // Integer to Eterm(integer)
 #define SET_INT(ETERM_NAME, VALUE) \
   ERL_NIF_TERM ETERM_NAME = enif_make_int(env, VALUE)
@@ -107,12 +116,12 @@ static ERL_NIF_TERM make_ok(ErlNifEnv* env, ERL_NIF_TERM value) {
 #define GET(MAP, NAME) \
   ERL_NIF_TERM NAME; \
   if (enif_get_map_value(env, MAP, enif_make_atom(env, #NAME), &NAME) == 0) \
-    make_error(env, "failed_to_get_map_value")
+    return make_error(env, "failed_to_get_map_value")
 
 // Eterm(any) -> Eterm(map)
 #define PUT(MAP, NAME) \
   if (enif_make_map_put(env, MAP, enif_make_atom(env, #NAME), NAME, &MAP) == 0) \
-    make_error(env, "failed_to_map_put")
+    return make_error(env, "failed_to_map_put")
 
 static ERL_NIF_TERM xml_read_memory(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_BINARY(content, argv[0]);
@@ -804,12 +813,90 @@ static ERL_NIF_TERM xml_schema_new_valid_ctxt(ErlNifEnv *env, int argc, const ER
   SET_POINTER(ptr, ctxt);
   return make_ok(env, ptr);
 }
+
+static ERL_NIF_TERM error_to_term(ErlNifEnv* env, xmlErrorPtr error) {
+  // int         domain; /* What part of the library raised this error */
+  // int         code;   /* The error code, e.g. an xmlParserError */
+  // char       *message;/* human-readable informative error message */
+  // xmlErrorLevel level;/* how consequent is the error */
+  // char       *file;   /* the filename */
+  // int         line;   /* the line number if available */
+  // char       *str1;   /* extra string information */
+  // char       *str2;   /* extra string information */
+  // char       *str3;   /* extra string information */
+  // int         int1;   /* extra number information */
+  // int         int2;   /* error column # or 0 if N/A (todo: rename field when we would brk ABI) */
+  // void       *ctxt;   /* the parser context if available */
+  // void       *node;   /* the node in the tree */
+  SET_INT(domain, error->domain);
+  SET_INT(code, error->code);
+  SET_STRING(message, error->message);
+  SET_INT(level, error->level);
+  SET_STRING(file, error->file);
+  SET_INT(line, error->line);
+  SET_STRING(str1, error->str1);
+  SET_STRING(str2, error->str2);
+  SET_STRING(str3, error->str3);
+  SET_INT(int1, error->int1);
+  SET_INT(int2, error->int2);
+
+  ERL_NIF_TERM map = enif_make_new_map(env);
+
+  // ignore put errors
+  enif_make_map_put(env, map, enif_make_atom(env, "domain"), domain, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "code"), code, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "message"), message, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "level"), level, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "file"), file, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "line"), line, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "str1"), str1, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "str2"), str2, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "str3"), str3, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "int1"), int1, &map);
+  enif_make_map_put(env, map, enif_make_atom(env, "int2"), int2, &map);
+
+  return map;
+}
+
+typedef struct _slist {
+  ERL_NIF_TERM data;
+  struct _slist* next;
+} slist;
+typedef struct {
+  ErlNifEnv* env;
+  slist* list;
+} valid_data;
+static void validError(void* userData, xmlErrorPtr error) {
+  valid_data* data = (valid_data*)userData;
+  ErlNifEnv* env = data->env;
+
+  slist* ptr = (slist*)xmlMalloc(sizeof(slist));
+  ptr->data = error_to_term(env, error);
+  ptr->next = data->list;
+  data->list = ptr;
+}
 static ERL_NIF_TERM xml_schema_validate_doc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlSchemaValidCtxtPtr, ctxt, argv[0]);
   GET_POINTER(xmlDocPtr, instance, argv[1]);
+
+  valid_data vd = { env, NULL };
+  xmlSchemaSetValidStructuredErrors(ctxt, validError, &vd);
+
   int result = xmlSchemaValidateDoc(ctxt, instance);
-  SET_INT(result_term, result);
-  return make_ok(env, result_term);
+
+  xmlSchemaSetValidStructuredErrors(ctxt, NULL, NULL);
+
+  slist* p = vd.list;
+  ERL_NIF_TERM xs = enif_make_list(env, 0);
+  while (p != NULL) {
+    xs = enif_make_list_cell(env, p->data, xs);
+    slist* next = p->next;
+    xmlFree(p);
+    p = next;
+  }
+
+  SET_INT(value, result);
+  return make_ok(env, enif_make_tuple2(env, value, xs));
 }
 static ERL_NIF_TERM xml_schema_free_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlSchemaParserCtxtPtr, ctxt, argv[0]);
