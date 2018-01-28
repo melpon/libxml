@@ -1,5 +1,5 @@
 defmodule Libxml.Error do
-  defstruct [
+  defstruct(
     # What part of the library raised this error
     domain: :unknown,
     # The error code, e.g. an xmlParserError
@@ -21,8 +21,8 @@ defmodule Libxml.Error do
     # extra number information
     int1: 0,
     # error column # or 0 if N/A (todo: rename field when we would brk ABI)
-    int2: 0,
-  ]
+    int2: 0
+  )
 
   def from_map(data) do
     %Libxml.Error{
@@ -36,44 +36,137 @@ defmodule Libxml.Error do
       str2: data[:str2] || "",
       str3: data[:str3] || "",
       int1: data[:int1] || 0,
-      int2: data[:int2] || 0,
+      int2: data[:int2] || 0
     }
   end
 
   defp to_domain(domain) do
     case domain do
-      0 -> :from_none
-      1 -> :from_parser       # The XML parser
-      2 -> :from_tree         # The tree module
-      3 -> :from_namespace    # The XML Namespace module
-      4 -> :from_dtd          # The XML DTD validation with parser context
-      5 -> :from_html         # The HTML parser
-      6 -> :from_memory       # The memory allocator
-      7 -> :from_output       # The serialization code
-      8 -> :from_io           # The Input/Output stack
-      9 -> :from_ftp          # The FTP module
-      10 -> :from_http        # The HTTP module
-      11 -> :from_xinclude    # The XInclude processing
-      12 -> :from_xpath       # The XPath module
-      13 -> :from_xpointer    # The XPointer module
-      14 -> :from_regexp      # The regular expressions module
-      15 -> :from_datatype    # The W3C XML Schemas Datatype module
-      16 -> :from_schemasp    # The W3C XML Schemas parser module
-      17 -> :from_schemasv    # The W3C XML Schemas validation module
-      18 -> :from_relaxngp    # The Relax-NG parser module
-      19 -> :from_relaxngv    # The Relax-NG validator module
-      20 -> :from_catalog     # The Catalog module
-      21 -> :from_c14n        # The Canonicalization module
-      22 -> :from_xslt        # The XSLT engine from libxslt
-      23 -> :from_valid       # The XML DTD validation with valid context
-      24 -> :from_check       # The error checking module
-      25 -> :from_writer      # The xmlwriter module
-      26 -> :from_module      # The dynamically loaded module modul
-      27 -> :from_i18n        # The module handling character conversion
-      28 -> :from_schematronv # The Schematron validator module
-      29 -> :from_buffer      # The buffers module
-      30 -> :from_uri         # The URI module
-      _ -> :unknown
+      0 ->
+        :from_none
+
+      # The XML parser
+      1 ->
+        :from_parser
+
+      # The tree module
+      2 ->
+        :from_tree
+
+      # The XML Namespace module
+      3 ->
+        :from_namespace
+
+      # The XML DTD validation with parser context
+      4 ->
+        :from_dtd
+
+      # The HTML parser
+      5 ->
+        :from_html
+
+      # The memory allocator
+      6 ->
+        :from_memory
+
+      # The serialization code
+      7 ->
+        :from_output
+
+      # The Input/Output stack
+      8 ->
+        :from_io
+
+      # The FTP module
+      9 ->
+        :from_ftp
+
+      # The HTTP module
+      10 ->
+        :from_http
+
+      # The XInclude processing
+      11 ->
+        :from_xinclude
+
+      # The XPath module
+      12 ->
+        :from_xpath
+
+      # The XPointer module
+      13 ->
+        :from_xpointer
+
+      # The regular expressions module
+      14 ->
+        :from_regexp
+
+      # The W3C XML Schemas Datatype module
+      15 ->
+        :from_datatype
+
+      # The W3C XML Schemas parser module
+      16 ->
+        :from_schemasp
+
+      # The W3C XML Schemas validation module
+      17 ->
+        :from_schemasv
+
+      # The Relax-NG parser module
+      18 ->
+        :from_relaxngp
+
+      # The Relax-NG validator module
+      19 ->
+        :from_relaxngv
+
+      # The Catalog module
+      20 ->
+        :from_catalog
+
+      # The Canonicalization module
+      21 ->
+        :from_c14n
+
+      # The XSLT engine from libxslt
+      22 ->
+        :from_xslt
+
+      # The XML DTD validation with valid context
+      23 ->
+        :from_valid
+
+      # The error checking module
+      24 ->
+        :from_check
+
+      # The xmlwriter module
+      25 ->
+        :from_writer
+
+      # The dynamically loaded module modul
+      26 ->
+        :from_module
+
+      # The module handling character conversion
+      27 ->
+        :from_i18n
+
+      # The Schematron validator module
+      28 ->
+        :from_schematronv
+
+      # The buffers module
+      29 ->
+        :from_buffer
+
+      # The URI module
+      30 ->
+        :from_uri
+
+      _ ->
+        :unknown
     end
   end
 
@@ -819,14 +912,23 @@ defmodule Libxml.Error do
 
   defp to_level(level) do
     case level do
-      0 -> :err_none
+      0 ->
+        :err_none
+
       # A simple warning
-      1 -> :err_warning
+      1 ->
+        :err_warning
+
       # A recoverable error
-      2 -> :err_error
+      2 ->
+        :err_error
+
       # A fatal error
-      3 -> :err_fatal
-      _ -> :unknown
+      3 ->
+        :err_fatal
+
+      _ ->
+        :unknown
     end
   end
 end

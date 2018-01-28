@@ -356,6 +356,7 @@ defmodule LibxmlTest do
         Libxml.safe_read_memory(content, fn doc ->
           Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
             ret = Libxml.Schema.validate_doc(ctxt, doc)
+
             error = %Libxml.Error{
               domain: :from_schemasv,
               code: :schemav_element_content,
@@ -367,8 +368,9 @@ defmodule LibxmlTest do
               str2: "",
               str3: "",
               int1: 0,
-              int2: 0,
+              int2: 0
             }
+
             assert {:error, [error]} == ret
           end)
         end)
