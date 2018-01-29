@@ -308,7 +308,7 @@ defmodule LibxmlTest do
   test "XML Schema NIF" do
     {:ok, parser_ctxt} = Libxml.Nif.xml_schema_new_parser_ctxt("test/all_0.xsd")
     assert 0 != parser_ctxt
-    {:ok, schema} = Libxml.Nif.xml_schema_parse(parser_ctxt)
+    {:ok, {schema, []}} = Libxml.Nif.xml_schema_parse(parser_ctxt)
     assert 0 != schema
     :ok = Libxml.Nif.xml_schema_free_parser_ctxt(parser_ctxt)
 
@@ -327,7 +327,7 @@ defmodule LibxmlTest do
 
   test "XML Schema" do
     fun = fn ctxt ->
-      Libxml.Schema.safe_parse(ctxt, fn schema ->
+      Libxml.Schema.safe_parse(ctxt, fn schema, _ ->
         content = "<doc><a/><b/><c/></doc>"
 
         Libxml.safe_read_memory(content, fn doc ->
@@ -350,7 +350,7 @@ defmodule LibxmlTest do
 
   test "XML Schema with invalid document" do
     Libxml.Schema.safe_new_parser_ctxt("test/all_0.xsd", fn ctxt ->
-      Libxml.Schema.safe_parse(ctxt, fn schema ->
+      Libxml.Schema.safe_parse(ctxt, fn schema, _ ->
         content = "<doc><a/><b/></doc>"
 
         Libxml.safe_read_memory(content, fn doc ->
@@ -398,13 +398,50 @@ defmodule LibxmlTest do
   test "XML Schema from https://stackoverflow.com/questions/6284827/why-does-this-xml-validation-via-xsd-fail-in-libxml2-but-succeed-in-xmllint-an" do
     Libxml.safe_read_memory(@schema, fn doc ->
       Libxml.Schema.safe_new_doc_parser_ctxt(doc, fn ctxt ->
-        Libxml.Schema.safe_parse(ctxt, fn schema ->
+        Libxml.Schema.safe_parse(ctxt, fn schema, _ ->
           Libxml.safe_read_memory(@content, fn doc ->
             Libxml.Schema.safe_new_valid_ctxt(schema, fn ctxt ->
               ret = Libxml.Schema.validate_doc(ctxt, doc)
               assert {:ok, []} == ret
             end)
           end)
+        end)
+      end)
+    end)
+  end
+
+  @schema """
+  <?xml version="1.0" encoding="utf-8" ?>
+  <!DOCTYPE xs:schema PUBLIC "-//W3C//DTD XMLSCHEMA 200102//EN" "XMLSchema.dtd" >
+  <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://example.com/XMLSchema/1.0" targetNamespace="http://example.com/XMLSchema/1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+      <xs:hoge name="foo">
+      </xs:hoge>
+  </xs:schema>
+  """
+
+  test "invalid XML Schema" do
+    Libxml.safe_read_memory(@schema, fn doc ->
+      Libxml.Schema.safe_new_doc_parser_ctxt(doc, fn ctxt ->
+        Libxml.Schema.safe_parse(ctxt, fn schema, errors ->
+          assert 0 == schema.pointer
+
+          error = %Libxml.Error{
+            domain: :from_schemasp,
+            code: :schemap_s4s_elem_not_allowed,
+            level: :err_error,
+            file: "noname.xml",
+            line: 4,
+            message:
+              "Element '{http://www.w3.org/2001/XMLSchema}schema': The content is not valid. Expected is ((include | import | redefine | annotation)*, (((simpleType | complexType | group | attributeGroup) | element | attribute | notation), annotation*)*).\n",
+            str1: "Element '{http://www.w3.org/2001/XMLSchema}schema'",
+            str2:
+              "((include | import | redefine | annotation)*, (((simpleType | complexType | group | attributeGroup) | element | attribute | notation), annotation*)*)",
+            str3: "",
+            int1: 0,
+            int2: 0
+          }
+
+          assert [error] == errors
         end)
       end)
     end)

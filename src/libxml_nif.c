@@ -777,42 +777,18 @@ static ERL_NIF_TERM get_xml_node_set(ErlNifEnv *env, int argc, const ERL_NIF_TER
   return make_ok(env, map);
 }
 
-static ERL_NIF_TERM xml_schema_new_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_BINARY(url, argv[0]);
 
-  char* urlstr = (char*)xmlMalloc(url.size + 1);
-  if (urlstr == NULL) {
-    return make_error(env, "malloc_failed");
-  }
-  memcpy(urlstr, url.data, url.size);
-  urlstr[url.size] = '\0';
 
-  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewParserCtxt(urlstr);
 
-  xmlFree(urlstr);
+typedef struct _slist {
+  ERL_NIF_TERM data;
+  struct _slist* next;
+} slist;
 
-  SET_POINTER(ptr, ctxt);
-
-  return make_ok(env, ptr);
-}
-static ERL_NIF_TERM xml_schema_new_doc_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_POINTER(xmlDocPtr, doc, argv[0]);
-  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewDocParserCtxt(doc);
-  SET_POINTER(ptr, ctxt);
-  return make_ok(env, ptr);
-}
-static ERL_NIF_TERM xml_schema_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_POINTER(xmlSchemaParserCtxtPtr, ctxt, argv[0]);
-  xmlSchemaPtr schema = xmlSchemaParse(ctxt);
-  SET_POINTER(ptr, schema);
-  return make_ok(env, ptr);
-}
-static ERL_NIF_TERM xml_schema_new_valid_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_POINTER(xmlSchemaPtr, schema, argv[0]);
-  xmlSchemaValidCtxtPtr ctxt = xmlSchemaNewValidCtxt(schema);
-  SET_POINTER(ptr, ctxt);
-  return make_ok(env, ptr);
-}
+typedef struct {
+  ErlNifEnv* env;
+  slist* list;
+} structured_data;
 
 static ERL_NIF_TERM error_to_term(ErlNifEnv* env, xmlErrorPtr error) {
   // int         domain; /* What part of the library raised this error */
@@ -858,16 +834,8 @@ static ERL_NIF_TERM error_to_term(ErlNifEnv* env, xmlErrorPtr error) {
   return map;
 }
 
-typedef struct _slist {
-  ERL_NIF_TERM data;
-  struct _slist* next;
-} slist;
-typedef struct {
-  ErlNifEnv* env;
-  slist* list;
-} valid_data;
-static void validError(void* userData, xmlErrorPtr error) {
-  valid_data* data = (valid_data*)userData;
+static void structured_error(void* userData, xmlErrorPtr error) {
+  structured_data* data = (structured_data*)userData;
   ErlNifEnv* env = data->env;
 
   slist* ptr = (slist*)xmlMalloc(sizeof(slist));
@@ -875,18 +843,9 @@ static void validError(void* userData, xmlErrorPtr error) {
   ptr->next = data->list;
   data->list = ptr;
 }
-static ERL_NIF_TERM xml_schema_validate_doc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_POINTER(xmlSchemaValidCtxtPtr, ctxt, argv[0]);
-  GET_POINTER(xmlDocPtr, instance, argv[1]);
 
-  valid_data vd = { env, NULL };
-  xmlSchemaSetValidStructuredErrors(ctxt, validError, &vd);
-
-  int result = xmlSchemaValidateDoc(ctxt, instance);
-
-  xmlSchemaSetValidStructuredErrors(ctxt, NULL, NULL);
-
-  slist* p = vd.list;
+static ERL_NIF_TERM structured_get_result(ErlNifEnv* env, structured_data* sd) {
+  slist* p = sd->list;
   ERL_NIF_TERM xs = enif_make_list(env, 0);
   while (p != NULL) {
     xs = enif_make_list_cell(env, p->data, xs);
@@ -894,7 +853,67 @@ static ERL_NIF_TERM xml_schema_validate_doc(ErlNifEnv *env, int argc, const ERL_
     xmlFree(p);
     p = next;
   }
+  return xs;
+}
 
+
+static ERL_NIF_TERM xml_schema_new_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_BINARY(url, argv[0]);
+
+  char* urlstr = (char*)xmlMalloc(url.size + 1);
+  if (urlstr == NULL) {
+    return make_error(env, "malloc_failed");
+  }
+  memcpy(urlstr, url.data, url.size);
+  urlstr[url.size] = '\0';
+
+  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewParserCtxt(urlstr);
+
+  xmlFree(urlstr);
+
+  SET_POINTER(ptr, ctxt);
+
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_new_doc_parser_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlDocPtr, doc, argv[0]);
+  xmlSchemaParserCtxtPtr ctxt = xmlSchemaNewDocParserCtxt(doc);
+  SET_POINTER(ptr, ctxt);
+  return make_ok(env, ptr);
+}
+static ERL_NIF_TERM xml_schema_parse(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaParserCtxtPtr, ctxt, argv[0]);
+
+  structured_data sd = { env, NULL };
+  xmlSchemaSetParserStructuredErrors(ctxt, structured_error, &sd);
+
+  xmlSchemaPtr schema = xmlSchemaParse(ctxt);
+
+  xmlSchemaSetParserStructuredErrors(ctxt, NULL, NULL);
+
+  ERL_NIF_TERM xs = structured_get_result(env, &sd);
+  SET_POINTER_OR_NULL(ptr, schema);
+  return make_ok(env, enif_make_tuple2(env, ptr, xs));
+}
+static ERL_NIF_TERM xml_schema_new_valid_ctxt(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaPtr, schema, argv[0]);
+  xmlSchemaValidCtxtPtr ctxt = xmlSchemaNewValidCtxt(schema);
+  SET_POINTER(ptr, ctxt);
+  return make_ok(env, ptr);
+}
+
+static ERL_NIF_TERM xml_schema_validate_doc(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlSchemaValidCtxtPtr, ctxt, argv[0]);
+  GET_POINTER(xmlDocPtr, instance, argv[1]);
+
+  structured_data sd = { env, NULL };
+  xmlSchemaSetValidStructuredErrors(ctxt, structured_error, &sd);
+
+  int result = xmlSchemaValidateDoc(ctxt, instance);
+
+  xmlSchemaSetValidStructuredErrors(ctxt, NULL, NULL);
+
+  ERL_NIF_TERM xs = structured_get_result(env, &sd);
   SET_INT(value, result);
   return make_ok(env, enif_make_tuple2(env, value, xs));
 }

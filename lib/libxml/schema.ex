@@ -20,8 +20,10 @@ defmodule Libxml.Schema do
   end
 
   def parse(%ParserCtxt{} = ctxt) do
-    {:ok, schema} = Libxml.Nif.xml_schema_parse(ctxt.pointer)
-    %__MODULE__{pointer: schema}
+    {:ok, {schema, errors}} = Libxml.Nif.xml_schema_parse(ctxt.pointer)
+    errors = Enum.map(errors, &Libxml.Error.from_map/1)
+
+    {%__MODULE__{pointer: schema}, errors}
   end
 
   def new_valid_ctxt(%__MODULE__{} = schema) do
@@ -75,13 +77,16 @@ defmodule Libxml.Schema do
   end
 
   def safe_parse(%ParserCtxt{} = ctxt, fun) do
-    {:ok, schema} = Libxml.Nif.xml_schema_parse(ctxt.pointer)
+    {:ok, {schema, errors}} = Libxml.Nif.xml_schema_parse(ctxt.pointer)
     schema = %__MODULE__{pointer: schema}
+    errors = Enum.map(errors, &Libxml.Error.from_map/1)
 
     try do
-      fun.(schema)
+      fun.(schema, errors)
     after
-      free(schema)
+      if schema.pointer != 0 do
+        free(schema)
+      end
     end
   end
 
