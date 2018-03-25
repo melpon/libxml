@@ -623,6 +623,19 @@ static ERL_NIF_TERM get_xml_char(ErlNifEnv *env, int argc, const ERL_NIF_TERM ar
   return make_ok(env, enif_make_binary(env, &bin));
 }
 
+static ERL_NIF_TERM get_xml_prop(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlChar*, str, argv[0]);
+
+  ErlNifBinary bin;
+  int ret = enif_alloc_binary(strlen((const char*)str), &bin);
+  if (ret == 0) {
+    return make_error(env, "bad_alloc");
+  }
+  memcpy(bin.data, str, bin.size);
+
+  return make_ok(env, enif_make_binary(env, &bin));
+}
+
 static ERL_NIF_TERM get_xml_ns(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlNsPtr, ns, argv[0]);
 
@@ -970,6 +983,7 @@ static ErlNifFunc nif_funcs[] = {
   {"get_xml_node", 1, get_xml_node},
   {"set_xml_node", 2, set_xml_node},
   {"get_xml_char", 1, get_xml_char},
+  {"get_xml_prop", 2, get_xml_prop},
   {"get_xml_ns", 1, get_xml_ns},
   {"get_xml_xpath_context", 1, get_xml_xpath_context},
   {"set_xml_xpath_context", 2, set_xml_xpath_context},

@@ -5,7 +5,7 @@ defmodule LibxmlTest do
   @content """
   <!DOCTYPE doc [<!ATTLIST normId id ID #IMPLIED>]>
   <doc>
-     <text>First line&#x0d;&#10;Second line</text>
+     <text attribute="gibberish">First line&#x0d;&#10;Second line</text>
      <value>&#x32;</value>
      <compute><![CDATA[value>"0" && value<"10" ?"valid":"error"]]></compute>
      <compute expr='value>"0" &amp;&amp; value&lt;"10" ?"valid":"error"'>valid</compute>
@@ -16,7 +16,7 @@ defmodule LibxmlTest do
 
   @expected1 """
              <doc>
-                <text>First line&#xD;
+                <text attribute="gibberish">First line&#xD;
              Second line</text>
                 <value>2</value>
                 <compute>value&gt;"0" &amp;&amp; value&lt;"10" ?"valid":"error"</compute>
@@ -29,7 +29,7 @@ defmodule LibxmlTest do
 
   @expected2 """
              <doc>
-                <text>First line&#xD;
+                <text attribute="gibberish">First line&#xD;
              Second line</text>
                 <value>2</value>
                 
@@ -142,6 +142,10 @@ defmodule LibxmlTest do
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "First line\r\nSecond line" == content
     assert 0 == node.next
+
+    # SOMETHING
+    {:ok, content} = Libxml.Nif.get_xml_prop(node.content, "attribute")
+    assert "gibberish" == content
 
     {:ok, ctx} = Libxml.Nif.xml_xpath_new_context(doc)
     {:ok, p} = Libxml.Nif.xml_xpath_eval(ctx, "/doc/compute")
