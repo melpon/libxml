@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+- Add `Libxml.Nif.xml_get_prop/2` and `Libxml.get_prop/2`
+
 ## 1.1.2
 
 - `Libxml.Nif.xml_schema_parse/1`, `Libxml.Schema.parse/1` and `Libxml.Schema.safe_parse/1` returns error details

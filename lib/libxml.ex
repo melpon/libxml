@@ -103,6 +103,11 @@ defmodule Libxml do
     Libxml.Util.ptr_to_type(Libxml.Node, pointer)
   end
 
+  def get_prop(%Libxml.Node{pointer: pointer}, attr_name) do
+    {:ok, prop} = Libxml.Nif.xml_get_prop(pointer, attr_name)
+    prop
+  end
+
   def new_ns(%Libxml.Node{pointer: pointer}, href, prefix) do
     {:ok, pointer} = Libxml.Nif.xml_new_ns(pointer, href, prefix)
     %Libxml.Ns{pointer: pointer}

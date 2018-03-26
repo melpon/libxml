@@ -245,6 +245,8 @@ defmodule LibxmlTest do
       name = Libxml.Char.extract(node.name)
       assert "text" == name.content
 
+      assert "gibberish" == Libxml.get_prop(node, "attribute")
+
       node = Libxml.Node.extract(node.children)
       assert :text_node == node.type
       content = Libxml.Char.extract(node.more.content)
