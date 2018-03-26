@@ -130,11 +130,16 @@ defmodule LibxmlTest do
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "\n   " == content
 
-    {:ok, node} = Libxml.Nif.get_xml_node(node.next)
+    nodeptr = node.next
+    {:ok, node} = Libxml.Nif.get_xml_node(nodeptr)
     # XML_ELEMENT_NODE
     assert 1 == node.type
     {:ok, name} = Libxml.Nif.get_xml_char(node.name)
     assert "text" == name
+
+    # attribute
+    {:ok, prop} = Libxml.Nif.xml_get_prop(nodeptr, "attribute")
+    assert "gibberish" == prop
 
     {:ok, node} = Libxml.Nif.get_xml_node(node.children)
     # XML_TEXT_NODE
@@ -142,10 +147,6 @@ defmodule LibxmlTest do
     {:ok, content} = Libxml.Nif.get_xml_char(node.content)
     assert "First line\r\nSecond line" == content
     assert 0 == node.next
-
-    # SOMETHING
-    {:ok, content} = Libxml.Nif.get_xml_prop(node.content, "attribute")
-    assert "gibberish" == content
 
     {:ok, ctx} = Libxml.Nif.xml_xpath_new_context(doc)
     {:ok, p} = Libxml.Nif.xml_xpath_eval(ctx, "/doc/compute")

@@ -207,6 +207,35 @@ static ERL_NIF_TERM xml_doc_set_root_element(ErlNifEnv *env, int argc, const ERL
   return make_ok(env, ptr);
 }
 
+static ERL_NIF_TERM xml_get_prop(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  GET_POINTER(xmlNodePtr, node, argv[0]);
+  GET_BINARY(attr, argv[1]);
+
+  xmlChar* attrstr = (xmlChar*)xmlMalloc(attr.size + 1);
+  if (attrstr == NULL) {
+    return make_error(env, "malloc_failed");
+  }
+  memcpy(attrstr, attr.data, attr.size);
+  attrstr[attr.size] = '\0';
+
+  xmlChar* prop = xmlGetProp(node, attrstr);
+  xmlFree(attrstr);
+  if (prop == NULL) {
+    return make_error(env, "property not found");
+  }
+
+  ErlNifBinary bin;
+  int ret = enif_alloc_binary(strlen((const char*)prop), &bin);
+  if (ret == 0) {
+    xmlFree(prop);
+    return make_error(env, "bad_alloc");
+  }
+  memcpy(bin.data, prop, bin.size);
+  xmlFree(prop);
+
+  return make_ok(env, enif_make_binary(env, &bin));
+}
+
 static ERL_NIF_TERM xml_new_ns(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlNodePtr, node, argv[0]);
   GET_BINARY(href, argv[1]);
@@ -623,19 +652,6 @@ static ERL_NIF_TERM get_xml_char(ErlNifEnv *env, int argc, const ERL_NIF_TERM ar
   return make_ok(env, enif_make_binary(env, &bin));
 }
 
-static ERL_NIF_TERM get_xml_prop(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  GET_POINTER(xmlChar*, str, argv[0]);
-
-  ErlNifBinary bin;
-  int ret = enif_alloc_binary(strlen((const char*)str), &bin);
-  if (ret == 0) {
-    return make_error(env, "bad_alloc");
-  }
-  memcpy(bin.data, str, bin.size);
-
-  return make_ok(env, enif_make_binary(env, &bin));
-}
-
 static ERL_NIF_TERM get_xml_ns(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   GET_POINTER(xmlNsPtr, ns, argv[0]);
 
@@ -952,6 +968,8 @@ static ErlNifFunc nif_funcs[] = {
   {"xml_copy_doc", 2, xml_copy_doc},
   {"xml_free_doc", 1, xml_free_doc},
 
+  {"xml_get_prop", 2, xml_get_prop},
+
   {"xml_doc_copy_node", 3, xml_doc_copy_node},
   {"xml_doc_get_root_element", 1, xml_doc_get_root_element},
   {"xml_doc_set_root_element", 2, xml_doc_set_root_element},
@@ -983,7 +1001,6 @@ static ErlNifFunc nif_funcs[] = {
   {"get_xml_node", 1, get_xml_node},
   {"set_xml_node", 2, set_xml_node},
   {"get_xml_char", 1, get_xml_char},
-  {"get_xml_prop", 2, get_xml_prop},
   {"get_xml_ns", 1, get_xml_ns},
   {"get_xml_xpath_context", 1, get_xml_xpath_context},
   {"set_xml_xpath_context", 2, set_xml_xpath_context},

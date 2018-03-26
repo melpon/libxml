@@ -9,6 +9,8 @@ defmodule Libxml.Nif do
   def xml_copy_doc(_doc, _recursive), do: raise("NIF not implemented")
   def xml_free_doc(_doc), do: raise("NIF not implemented")
 
+  def xml_get_prop(_char, _attr_name), do: raise("NIF not implemented")
+
   def xml_doc_copy_node(_node, _doc, _extended), do: raise("NIF not implemented")
   def xml_doc_get_root_element(_doc), do: raise("NIF not implemented")
   def xml_doc_set_root_element(_doc, _node), do: raise("NIF not implemented")
@@ -41,7 +43,6 @@ defmodule Libxml.Nif do
   def get_xml_node(_node), do: raise("NIF not implemented")
   def set_xml_node(_node, _map), do: raise("NIF not implemented")
   def get_xml_char(_char), do: raise("NIF not implemented")
-  def get_xml_prop(_char, _attr_name), do: raise("NIF not implemented")
   def get_xml_ns(_ns), do: raise("NIF not implemented")
   def get_xml_xpath_context(_obj), do: raise("NIF not implemented")
   def set_xml_xpath_context(_obj, _map), do: raise("NIF not implemented")
