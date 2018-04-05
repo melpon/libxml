@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4
+
+- Fix Makefile compatible issue on Linux.
+
 ## 1.1.3
 
 - Add `Libxml.Nif.xml_get_prop/2` and `Libxml.get_prop/2`
