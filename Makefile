@@ -3,10 +3,13 @@ LIBXML2_VERSION = 2.9.4
 LIBXML2_SHA256 = "ffb911191e509b966deb55de705387f14156e1a56b21824357cdf0053233633c"
 SHASUM = $(shell if which shasum > /dev/null 2>&1; then echo "shasum -a 256"; else echo "sha256sum"; fi)
 CURL = $(shell if which curl > /dev/null 2>&1; then echo "curl -LO"; else echo "wget"; fi)
-DARWIN_LDFLAGS = $(shell if [ "`uname`" == "Darwin" ]; then echo "-undefined dynamic_lookup"; else echo ""; fi)
+
+ifeq ($(shell uname),Darwin)
+	LDFLAGS += -undefined dynamic_lookup
+endif
 
 priv/libxml_nif.so: src/libxml_nif.c priv/libxml2/lib/libxml2.a
-	cc -fPIC -I$(ERL_INCLUDE_PATH) -Ipriv/libxml2/include/libxml2 -Lpriv/libxml2/lib -shared $(DARWIN_LDFLAGS) -o $@ src/libxml_nif.c priv/libxml2/lib/libxml2.a
+	cc -fPIC -I$(ERL_INCLUDE_PATH) -Ipriv/libxml2/include/libxml2 -Lpriv/libxml2/lib -shared $(LDFLAGS) -o $@ src/libxml_nif.c priv/libxml2/lib/libxml2.a
 
 priv/libxml2/lib/libxml2.a:
 	@rm -rf libxml2_build
