@@ -19,7 +19,7 @@ priv/libxml2/lib/libxml2.a:
 		&& echo "$(LIBXML2_SHA256) *libxml2-2.9.4.tar.gz" | $(SHASUM) -c \
 		&& tar xf libxml2-2.9.4.tar.gz \
 		&& cd libxml2-2.9.4 \
-		&& ./configure --prefix=`pwd`/../../priv/libxml2 --with-pic --without-python \
+		&& ./configure --prefix=`pwd`/../../priv/libxml2 --with-pic --without-python --with-lzma=no \
 		&& make -j2 \
 		&& make install
 	@rm -rf libxml2_build
