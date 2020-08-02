@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Compile.MakeLibxml do
       Mix.raise("exit code #{result_code}")
     end
 
-    Mix.Project.build_structure
+    Mix.Project.build_structure()
     :ok
   end
 end
