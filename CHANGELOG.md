@@ -1,5 +1,12 @@
 # Changelog
 
+## master
+
+- Creating ./priv if it doesn't exist on compile ([#5](https://github.com/melpon/libxml/pull/5))
+- Building LibXML without lzma ([#7](https://github.com/melpon/libxml/pull/7))
+- Linking with zlib ([#9](https://github.com/melpon/libxml/pull/9))
+- Update dependencies
+
 ## 1.1.5
 
 - Update dependencies
