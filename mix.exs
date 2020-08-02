@@ -41,12 +41,14 @@ end
 
 defmodule Mix.Tasks.Compile.MakeLibxml do
   def run(_args) do
+    File.mkdir("priv")
     {_, result_code} = System.cmd("make", [], into: IO.stream(:stdio, :line))
 
     if result_code != 0 do
       Mix.raise("exit code #{result_code}")
     end
 
+    Mix.Project.build_structure
     :ok
   end
 end
