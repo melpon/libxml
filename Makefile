@@ -9,7 +9,7 @@ ifeq ($(shell uname),Darwin)
 endif
 
 priv/libxml_nif.so: src/libxml_nif.c priv/libxml2/lib/libxml2.a
-	cc -fPIC -I$(ERL_INCLUDE_PATH) -Ipriv/libxml2/include/libxml2 -Lpriv/libxml2/lib -shared $(LDFLAGS) -o $@ src/libxml_nif.c priv/libxml2/lib/libxml2.a
+	cc -fPIC -I$(ERL_INCLUDE_PATH) -Ipriv/libxml2/include/libxml2 -Lpriv/libxml2/lib -shared $(LDFLAGS) -o $@ src/libxml_nif.c priv/libxml2/lib/libxml2.a -lz
 
 priv/libxml2/lib/libxml2.a:
 	@rm -rf libxml2_build
